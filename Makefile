@@ -21,7 +21,7 @@
 
 PROGRAM		= geiger
 OBJECTS		= geiger.o
-DEVICE		= t2313
+DEVICE		= attiny2313
 BAUDRATE	= 57600
 CLOCK		= 8000000
 #PROGRAMMER	= usbtiny
