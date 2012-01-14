@@ -21,9 +21,11 @@
 
 PROGRAM		= geiger
 OBJECTS		= geiger.o
-DEVICE		= attiny2313
+DEVICE		= t2313
+BAUDRATE	= 57600
 CLOCK		= 8000000
-PROGRAMMER	= usbtiny
+#PROGRAMMER	= usbtiny
+PROGRAMMER	= avrispmkII
 PORT		= usb
 
 # Fuse configuration:
@@ -37,7 +39,7 @@ EFUSE		= 0xFF
 
 # Tune the lines below only if you know what you are doing:
 
-AVRDUDE = avrdude -c $(PROGRAMMER) -P $(PORT) -p $(DEVICE)
+AVRDUDE = avrdude -c $(PROGRAMMER) -P $(PORT) -p $(DEVICE) -b $(BAUDRATE)
 COMPILE = avr-gcc -g -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
 # Linker options
