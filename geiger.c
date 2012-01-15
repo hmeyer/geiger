@@ -1,28 +1,21 @@
 /*
-	Title: Geiger Counter with Serial Data Reporting
-	Description: This is the firmware for the mightyohm.com Geiger Counter.
+	Title: Geiger Counter with Display
+	Description: This is a firmware for the mightyohm.com Geiger Counter.
 		There is more information at http://mightyohm.com/geiger 
 		
-	Author:		Jeff Keyzer
-	Company:	MightyOhm Engineering
-	Website:	http://mightyohm.com/
-	Contact:	jeff <at> mightyohm.com
+	Author:		Henning Meyer (Jeff Keyzer)
+	Website:	http://efunnel.wordpress.com (http://mightyohm.com/)
+	Contact:	hmeyer <at> gmx.eu (jeff <at> mightyohm.com)
   
 	This firmware controls the ATtiny2313 AVR microcontroller on board the Geiger Counter kit.
 	
 	When an impulse from the GM tube is detected, the firmware flashes the LED and produces a short
-	beep on the piezo speaker.  It also outputs an active-high pulse (default 100us) on the PULSE pin.
+	beep on the piezo speaker. 
 	
 	A pushbutton on the PCB can be used to mute the beep.
 	
-	A running average of the detected counts per second (CPS), counts per minute (CPM), and equivalent dose
-	(uSv/hr) is output on the serial port once per second. The dose is based on information collected from 
-	the web, and may not be accurate.
-	
-	The serial port is configured for BAUD baud, 8-N-1 (default 9600).
-	
-	The data is reported in comma separated value (CSV) format:
-	CPS, #####, CPM, #####, uSv/hr, ###.##, SLOW|FAST|INST
+	A running average of the detected counts per second (CPS), counts per minute (CPM)
+	is output on the Display.
 	
 	There are three modes.  Normally, the sample period is LONG_PERIOD (default 60 seconds). This is SLOW averaging mode.
 	If the last five measured counts exceed a preset threshold, the sample period switches to SHORT_PERIOD seconds (default 5 seconds).
@@ -38,11 +31,8 @@
 	Don't rely on the collected data to be an accurate measure of radiation exposure! Be safe!
 	
 	
-	Change log:
-	8/4/11 1.00: Initial release for Chaos Camp 2011!
 
-
-		Copyright 2011 Jeff Keyzer, MightyOhm Engineering
+		Copyright 2011 Henning Meyer (Jeff Keyzer, MightyOhm Engineering)
  
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by

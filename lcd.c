@@ -1,3 +1,22 @@
+// Display code for controlling a PCD8544 (Nokia 3300) display using avr
+// by Henning Meyer 
+// based on Arduino Tutorial http://www.arduino.cc/playground/Code/PCD8544
+
+/*
+        This program is free software: you can redistribute it and/or modify
+        it under the terms of the GNU General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        (at your option) any later version.
+
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU General Public License for more details.
+
+        You should have received a copy of the GNU General Public License
+        along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <avr/io.h>			// this contains the AVR IO port definitions
 #include <avr/interrupt.h>	// interrupt service routines
 #include <avr/pgmspace.h>	// tools used to store variables in program memory
