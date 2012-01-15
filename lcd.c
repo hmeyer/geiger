@@ -116,33 +116,51 @@ static const uint16_t nums[] = {
 		B8(111),
 		B8(001),
 		B8(111)),
-	character( // c
+	character( // c - 10
 		B8(011),
 		B8(100),
 		B8(100),
 		B8(100),
 		B8(111)),
-	character( // p
+	character( // p - 11
 		B8(110),
 		B8(101),
 		B8(111),
 		B8(100),
 		B8(100)),
-	character( // m
+	character( // m - 12
 		B8(111),
 		B8(111),
 		B8(111),
 		B8(101),
 		B8(101)),
-	character( // s
+	character( // s -13
 		B8(011),
 		B8(100),
 		B8(111),
 		B8(001),
-		B8(111))
+		B8(111)),
+	character( // i - 14
+		B8(010),
+		B8(000),
+		B8(010),
+		B8(010),
+		B8(010)),
+	character( // f - 15
+		B8(011),
+		B8(100),
+		B8(111),
+		B8(100),
+		B8(100)),
+	character( // , - 16
+		B8(000),
+		B8(000),
+		B8(000),
+		B8(010),
+		B8(010))
 };
 
-static uint8_t col = 0;
+volatile uint8_t col = 0;
 
 
 void digitalWrite(byte pin, byte v) {
@@ -172,51 +190,67 @@ void LcdWrite(byte dc, byte data) {
 	if (dc == LCD_D) col++;
 }
 
+void LcdSpace(void) {
+	LcdWrite(LCD_D, 0x00);
+}
+
 void LcdClear(void)
 {
 	int index;
 	for (index = 0; index < LCD_X * LCD_Y / 8; index++)
-		LcdWrite(LCD_D, 0x00);
+		LcdSpace();
 }
 
-void LcdDigit(byte dig)
+
+void LcdCharacter(uint8_t c)
 {
 	byte index;
-	uint16_t d = nums[dig];
-	LcdWrite(LCD_D, 0x00);
-	for (index = 0; index < 5; index++) {
+	uint16_t d = nums[c];
+	LcdSpace();
+	for (index = 0; index < 3; index++) {
 		LcdWrite(LCD_D, d & B8(11111));
 		d >>= 5;
 	}
 }
 
 void LcdCPS(void) {
-	LcdDigit(13); // s
-	LcdDigit(11); // p
-	LcdDigit(10); // c
-	LcdWrite(LCD_D, 0x00);
-	LcdWrite(LCD_D, 0x00);
+	LcdCharacter(13); // s
+	LcdCharacter(11); // p
+	LcdCharacter(10); // c
+	LcdSpace();
+	LcdSpace();
 }
 
-void LcdCPM(void) {
-	LcdDigit(12); // m
-	LcdDigit(11); // p
-	LcdDigit(10); // c
-	LcdWrite(LCD_D, 0x00);
-	LcdWrite(LCD_D, 0x00);
+void LcdCPM(char mode) {
+	if (mode == 'i')
+		LcdCharacter(14);
+	else if (mode == 'f')
+		LcdCharacter(15);
+	else // mode = s
+		LcdCharacter(13);
+	LcdSpace();
+	LcdSpace();
+		
+	LcdCharacter(12); // m
+	LcdCharacter(11); // p
+	LcdCharacter(10); // c
+	LcdSpace();
+	LcdSpace();
 }
 
-void LcdNumber(uint32_t num)
+void LcdNumber(uint16_t num)
 {
+	if (num == 0) 
+		LcdCharacter(0);
 	while (num>0) {
-		LcdDigit(num%10);
+		LcdCharacter(num%10);
 		num /= 10;
 	}
 }
 
 void LcdFillLine(void) {
 	while(col<LCD_X)
-		LcdWrite(LCD_D, 0x00);
+		LcdSpace();
 }
 
 
