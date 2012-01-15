@@ -66,6 +66,8 @@
 #include <util/delay.h>		// some convenient delay functions
 #include <stdlib.h>			// some handy functions like utoa()
 
+#include "lcd.h"
+
 // Defines
 #define VERSION			"1.00"
 #define URL				"http://mightyohm.com/geiger"
@@ -80,12 +82,12 @@
 #define PULSEWIDTH		100		// width of the PULSE output (in microseconds)
 
 // Function prototypes
-void uart_putchar(char c);			// send a character to the serial port
-void uart_putstring(char *buffer);		// send a null-terminated string in SRAM to the serial port
-void uart_putstring_P(char *buffer);	// send a null-terminated string in PROGMEM to the serial port
+//void uart_putchar(char c);			// send a character to the serial port
+//void uart_putstring(char *buffer);		// send a null-terminated string in SRAM to the serial port
+//void uart_putstring_P(char *buffer);	// send a null-terminated string in PROGMEM to the serial port
 
 void checkevent(void);	// flash LED and beep the piezo
-void sendreport(void);	// log data over the serial port
+//void sendreport(void);	// log data over the serial port
 
 // Global variables
 volatile uint8_t nobeep;		// flag used to mute beeper
@@ -177,7 +179,7 @@ ISR(TIMER1_COMPA_vect)
 }
 
 // Functions
-
+/*
 // Send a character to the UART
 void uart_putchar(char c)
 {
@@ -204,6 +206,7 @@ void uart_putstring_P(char *buffer)
 	while (pgm_read_byte(buffer) != '\0')	// are we done yet?
 		uart_putchar(pgm_read_byte(buffer++));	// read byte from PROGMEM and send it
 }
+*/
 
 // flash LED and beep the piezo
 void checkevent(void)
@@ -228,6 +231,36 @@ void checkevent(void)
 		TCCR0A &= ~(_BV(COM0A0));	// disconnect OCR0A from Timer0, this avoids occasional HVPS whine after beep
 	}	
 }
+
+// log data to LCD
+void reportLCD(void) {
+	uint32_t cpm;	// This is the CPM value we will report
+	if(tick) {	// 1 second has passed, time to report data via UART
+		tick = 0;	// reset flag for the next interval
+			
+		if (overflow) {
+			cpm = cps*60UL;
+			mode = 2;
+			overflow = 0;
+		}				
+		else if (fastcpm > THRESHOLD) {	// if cpm is too high, use the short term average instead
+			mode = 1;
+			cpm = fastcpm;	// report cpm based on last 5 samples
+		} else {
+			mode = 0;
+			cpm = slowcpm;	// report cpm based on last 60 samples
+		}
+		gotoXY(20,3);
+		LcdCPM();
+		LcdNumber(cpm);
+		LcdFillLine();
+		gotoXY(20,2);
+		LcdCPS();
+		LcdNumber(cps);
+		LcdFillLine();
+	}
+}
+/*
 // log data over the serial port
 void sendreport(void)
 {
@@ -289,6 +322,7 @@ void sendreport(void)
 		uart_putchar('\n');	
 	}	
 }
+*/
 
 // Start of main program
 int main(void)
@@ -301,13 +335,15 @@ int main(void)
 	// Enable USART transmitter and receiver
 	UCSRB = (1<<RXEN) | (1<<TXEN);
 
-	uart_putstring_P(PSTR("mightyohm.com Geiger Counter " VERSION "\n"));
-	uart_putstring_P(PSTR(URL "\n"));
+//	uart_putstring_P(PSTR("mightyohm.com Geiger Counter " VERSION "\n"));
+//	uart_putstring_P(PSTR(URL "\n"));
 
 	// Set up AVR IO ports
 	DDRB = _BV(PB4) | _BV(PB2);  // set pins connected to LED and piezo as outputs
 	DDRD = _BV(PD6);	// configure PULSE output
 	PORTD |= _BV(PD3);	// enable internal pull up resistor on pin connected to button
+
+	LcdInitialise();
 	
 	// Set up external interrupts	
 	// INT0 is triggered by a GM impulse
@@ -342,7 +378,9 @@ int main(void)
 		
 		checkevent();	// check if we should signal an event (led + beep)
 	
-		sendreport();	// send a log report over serial
+//		sendreport();	// send a log report over serial
+
+		reportLCD();	// send results to LCD
 		
 		checkevent();	// check again before going to sleep
 		

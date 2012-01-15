@@ -20,7 +20,7 @@
 # EFUSE			Target device configuration fuses (extended).
 
 PROGRAM		= geiger
-OBJECTS		= geiger.o
+OBJECTS		= geiger.o lcd.o
 DEVICE		= attiny2313
 BAUDRATE	= 57600
 CLOCK		= 8000000
@@ -70,8 +70,8 @@ clean:
 %.hex: %.elf
 	avr-objcopy -j .text -j .data -O ihex $< $@
 	
-%.elf: %.o
-	$(COMPILE) -o $@ $< $(LDFLAGS)
+geiger.elf: $(OBJECTS)
+	$(COMPILE) -o $@ $(OBJECTS) $(LDFLAGS)
 
 %.o: %.c
 	$(COMPILE) -c $< -o $@
