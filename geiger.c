@@ -171,6 +171,31 @@ void checkevent(void)
 	}	
 }
 
+void graphLCD(void) {
+	gotoXY(0,2);
+	uint8_t b;
+	int8_t i;
+	uint8_t x;
+	uint8_t row;
+	uint8_t rowidx;
+	for(row = 0; row < 4; row++) {
+		rowidx = 8 * row;
+		for( x = 0; x < LCD_X; x++) {
+			b = 0;
+			uint8_t y;
+			for( y = 8; y ; y--) {
+				b <<= 1;
+				uint8_t tidx = rowidx + y;
+				if (tidx < LONG_PERIOD)  {
+					i = idx - tidx; if (i<0) i += LONG_PERIOD;
+					if (x < buffer[i]) b |= 1;
+				}
+			}
+			LcdByte(b);
+		}
+	}
+}
+
 // log data to LCD
 void reportLCD(void) {
 	uint16_t cpm;	// This is the CPM value we will report
@@ -206,14 +231,15 @@ void reportLCD(void) {
 			mode = 's'; // SLOW mode
 			cpm = slowcpm;	// report cpm based on last 60 samples
 		}
-		gotoXY(14,3);
+		gotoXY(14,1);
 		LcdCPM(mode);
 		LcdNumber(cpm);
 		LcdFillLine();
-		gotoXY(20,2);
+		gotoXY(20,0);
 		LcdCPS();
 		LcdNumber(cps);
 		LcdFillLine();
+		graphLCD();
 	}
 }
 /*

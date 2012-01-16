@@ -23,6 +23,7 @@
 #include <avr/sleep.h>		// sleep mode utilities
 #include <util/delay.h>		// some convenient delay functions
 #include <stdlib.h>			// some handy functions like utoa()
+#include "lcd.h"
 
 // LCD IS CONNECTED TO PORT B
 
@@ -36,8 +37,6 @@
 #define LCD_C     LOW
 #define LCD_D     HIGH
 
-#define LCD_X     84
-#define LCD_Y     48
 #define LCD_CMD   0
 
 #define byte uint8_t
@@ -211,6 +210,10 @@ void LcdWrite(byte dc, byte data) {
 
 void LcdSpace(void) {
 	LcdWrite(LCD_D, 0x00);
+}
+
+void LcdByte(uint8_t b) {
+	LcdWrite(LCD_D, b);
 }
 
 void LcdClear(void)
