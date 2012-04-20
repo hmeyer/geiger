@@ -68,8 +68,7 @@
 #define THRESHOLD		1000	// CPM threshold for fast avg mode
 #define LONG_PERIOD		30	// # of samples to keep in memory in slow avg mode
 #define SHORT_PERIOD	5		// # or samples for fast avg mode
-#define SCALE_FACTOR	57		//	CPM to uSv/hr conversion factor (x10,000 to avoid float)
-#define CS137_FACTOR	3677	// count to pSv conversion factor
+#define CS137_FACTOR	1471	// count to pSv conversion factor
 #define CS137_FACTOR_H	CS137_FACTOR * 60 // CPM to pSv/h conversion factor
 
 
@@ -272,7 +271,7 @@ inline void reportLCD(void) {
 		uint8_t pref;
 		mulShortenNum(&CS137Sv, CS137_FACTOR, &pref);
 		pref = 12 - pref;
-		gotoXY(20,2);
+		gotoXY(10,2);
 		LcdSv(pref);
 		LcdNumber(CS137Sv);
 		LcdString("cs137: ");
@@ -280,7 +279,7 @@ inline void reportLCD(void) {
 		CS137Sv = cpm;
 		mulShortenNum(&CS137Sv, CS137_FACTOR_H, &pref);
 		pref = 12 - pref;
-		gotoXY(20,0);
+		gotoXY(10,0);
 		LcdSvH(pref);
 		LcdNumber(CS137Sv);
 		LcdString("cs137: ");
