@@ -55,6 +55,8 @@
 #include <avr/sleep.h>		// sleep mode utilities
 #include <util/delay.h>		// some convenient delay functions
 #include <stdlib.h>			// some handy functions like utoa()
+#include <util/atomic.h>
+
 
 #include "lcd.h"
 
@@ -67,14 +69,18 @@
 #define LONG_PERIOD		30	// # of samples to keep in memory in slow avg mode
 #define SHORT_PERIOD	5		// # or samples for fast avg mode
 #define SCALE_FACTOR	57		//	CPM to uSv/hr conversion factor (x10,000 to avoid float)
+#define CS137_FACTOR	3677	// count to pSv conversion factor
+#define CS137_FACTOR_H	CS137_FACTOR * 60 // CPM to pSv/h conversion factor
+
 
 
 void checkevent(void);	// flash LED and beep the piezo
 void sleep1s(void);  // sleep using Timer1 Interupt
 
 // Global variables
-volatile uint8_t nobeep = 0;		// flag used to mute beeper
+volatile uint8_t nobeep = 1;		// flag used to mute beeper
 volatile uint16_t count = 0;		// number of GM events that has occurred
+volatile uint32_t overallcount = 0;	// number of GM events that has occurred ever
 volatile uint16_t slowcsum = 0;		// GM counts per minute in slow mode
 volatile uint16_t fastcsum = 0;		// GM counts per SHORT_PEROID
 volatile uint16_t cps = 0;			// GM counts per second, updated once a second
@@ -94,9 +100,11 @@ volatile uint8_t idx = 0;					// sample buffer index
 //	This interrupt is called on the falling edge of a GM pulse.
 ISR(INT0_vect)
 {
-	if (count < UINT16_MAX)	// check for overflow, if we do overflow just cap the counts at max possible
-		count++; // increase event counter
-	eventflag = 1;	// tell main program loop that a GM pulse has occurred
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+		if (count < UINT16_MAX)	// check for overflow, if we do overflow just cap the counts at max possible
+			count++; // increase event counter
+		eventflag = 1;	// tell main program loop that a GM pulse has occurred
+	}
 }
 
 //	Pin change interrupt for pin INT1 (pushbutton)
@@ -121,8 +129,11 @@ ISR(TIMER1_COMPA_vect)
 	tick = 1;	// update flag
 	
 //	PORTB ^= _BV(PB4);	// toggle the LED (for debugging purposes)
-	cps = count;
-	count = 0;  // reset counter
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+		cps = count;
+		count = 0;  // reset counter
+	}
+	overallcount += cps;
 	slowcsum -= buffer[idx];		// subtract oldest sample in sample buffer
 
 	uint16_t t = cps;
@@ -171,7 +182,7 @@ void checkevent(void)
 	}	
 }
 
-void graphLCD(void) {
+inline void graphLCD(void) {
 	gotoXY(0,2);
 	uint8_t b;
 	int8_t i;
@@ -196,8 +207,21 @@ void graphLCD(void) {
 	}
 }
 
+inline void mulShortenNum(uint32_t *num, uint16_t mul, uint8_t *pref) {
+	*pref = 0;
+	if (*num > 43000) {
+		*num /= 1000;
+		*pref += 3;
+	}
+	*num *= mul;
+	while(*num > 9999) {
+		*num /= 1000;
+		*pref += 3;
+	}
+}
+
 // log data to LCD
-void reportLCD(void) {
+inline void reportLCD(void) {
 	uint16_t cpm;	// This is the CPM value we will report
 	char mode;	// logging mode
 	if(tick) {	// 1 second has passed, time to report data via UART
@@ -231,15 +255,35 @@ void reportLCD(void) {
 			mode = 's'; // SLOW mode
 			cpm = slowcpm;	// report cpm based on last 60 samples
 		}
+/*
 		gotoXY(14,1);
-		LcdCPM(mode);
+	        LcdCharacter(mode);
+       		LcdSpace();
+		LcdString("cpm");
 		LcdNumber(cpm);
 		LcdFillLine();
 		gotoXY(20,0);
-		LcdCPS();
+		LcdString("cps");
 		LcdNumber(cps);
 		LcdFillLine();
 		graphLCD();
+*/
+		uint32_t CS137Sv = overallcount;
+		uint8_t pref;
+		mulShortenNum(&CS137Sv, CS137_FACTOR, &pref);
+		pref = 12 - pref;
+		gotoXY(20,2);
+		LcdSv(pref);
+		LcdNumber(CS137Sv);
+		LcdString("cs137: ");
+
+		CS137Sv = cpm;
+		mulShortenNum(&CS137Sv, CS137_FACTOR_H, &pref);
+		pref = 12 - pref;
+		gotoXY(20,0);
+		LcdSvH(pref);
+		LcdNumber(CS137Sv);
+		LcdString("cs137: ");
 	}
 }
 /*

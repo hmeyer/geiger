@@ -20,7 +20,8 @@
 # EFUSE			Target device configuration fuses (extended).
 
 PROGRAM		= geiger
-OBJECTS		= geiger.o lcd.o
+OBJECTS		= geiger.o
+HEADERS		= lcd.h character.h
 DEVICE		= attiny2313
 BAUDRATE	= 57600
 CLOCK		= 8000000
@@ -40,7 +41,7 @@ EFUSE		= 0xFF
 # Tune the lines below only if you know what you are doing:
 
 AVRDUDE = avrdude -c $(PROGRAMMER) -P $(PORT) -p $(DEVICE) -b $(BAUDRATE)
-COMPILE = avr-gcc -g -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -g -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -std=c99
 
 # Linker options
 LDFLAGS	= -Wl,-Map=$(PROGRAM).map -Wl,--cref 
@@ -73,7 +74,7 @@ clean:
 geiger.elf: $(OBJECTS)
 	$(COMPILE) -o $@ $(OBJECTS) $(LDFLAGS)
 
-%.o: %.c
+%.o: %.c $(HEADERS)
 	$(COMPILE) -c $< -o $@
 
 # Targets for code debugging and analysis:
